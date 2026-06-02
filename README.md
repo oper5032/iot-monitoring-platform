@@ -1,70 +1,89 @@
-# Getting Started with Create React App
+# IoT Monitoring Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React 기반 실시간 IoT 관제 대시보드 프로젝트입니다.
 
-## Available Scripts
+## 📌 Overview
 
-In the project directory, you can run:
+IoT 장비 상태 및 운영 현황을 실시간으로 모니터링하기 위한 대시보드입니다.
 
-### `npm start`
+사업별 데이터를 분리하여 시각화하고, 운영 상태를 빠르게 확인할 수 있도록 구성하였습니다.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠 Tech Stack
 
-### `npm test`
+### Frontend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+* React
+* JavaScript
+* HTML/CSS
 
-### `npm run build`
+### Infra / Deploy
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* Docker
+* Nginx
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Backend (연동 예정)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* Spring Boot
+* Redis
+* Kafka
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 📊 Main Features
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+* 실시간 상태 모니터링
+* 사업별 관제 대시보드
+* 상태 시각화 UI
+* Docker 기반 배포 환경
+* Nginx 기반 정적 서비스 구성
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📂 Project Structure
 
-## Learn More
+```text
+src/
+ ├ pages/
+ ├ components/
+ ├ layouts/
+ └ assets/
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🚀 Run Project
 
-### Code Splitting
+### Local
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm install
+npm start
+```
 
-### Analyzing the Bundle Size
+### Docker
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+docker build -t fds-monitoring .
+docker run -p 80:80 fds-monitoring
+```
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 📌 Future Plans
 
-### Advanced Configuration
+* Redis 기반 캐싱 적용
+* Kafka 기반 이벤트 처리 구조 추가
+* WebSocket 실시간 데이터 처리
+* Docker Compose 환경 구성
+* Monitoring 시스템 고도화
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## 👨‍💻 Developer
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+KiHyuck Kang
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+* IoT Platform Engineer
+* Backend / Android / Infra / Monitoring
