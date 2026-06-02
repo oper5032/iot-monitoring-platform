@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fds.dashboard.repository.main.DashboardRepository">
+
+	<select id="selectCityGasDeviceCnt" resultType="HashMap">
+		SELECT 
+			COUNT(*) AS city_cnt 
+		FROM fd_company c
+			JOIN fd_device d ON c.comp_id = d.comp_id 
+		WHERE
+			c.biz_type = 'SBIZ0050'
+			AND c.isUse = '1'
+			AND c.isFDSTest = '0';
+	</select>
+	
+	<select id="selectCityGasCompanyList" resultType="HashMap">
+		SELECT 
+			c.comp_id,
+			c.comp_nm,
+			c.address,
+			s.safety_nm AS emp_nm,
+			s.safety_phone AS emp_phone,
+			COUNT(d.device_id) AS cnt
+		FROM fd_company c
+			LEFT JOIN (
+				SELECT 
+					comp_id,
+					safety_nm,
+					safety_phone
+				FROM fd_safety_info
+				WHERE
+					isDel = '0'
+				GROUP BY comp_id
+			) s ON c.comp_id = s.comp_id 
+			JOIN fd_device d ON c.comp_id = d.comp_id 
+		WHERE
+			c.biz_type = 'SBIZ0050'
+			AND c.isUse = '1'
+			AND c.isFDSTest = '0'
+		GROUP BY c.comp_id	
+		ORDER BY c.comp_nm;
+	</select>
+
+    <select id="selectCityGasCompanyStatusList" resultType="HashMap">
+		SELECT 
+			A.*,
+			IF(TIMESTAMPDIFF(HOUR,A.tran_dttm,NOW()) >= 25, '통신점검', '정상') AS comm_stts,
+			IF(CH1 + CH2 >= 100, '설치점검', '정상') AS install_stts
+		FROM (
+			SELECT 
+				c.group_comp_nm,
+				d.serial_no,
+				cu.cust_nm,
+				cu.cust_addr,
+				co1.code_nm,
+				CASE
+					WHEN LENGTH(m.piece_number) = 10 AND LEFT(m.piece_number, 1) = 'D' THEN '대성'
+					WHEN LENGTH(m.piece_number) = 16 OR LENGTH(m.piece_number) = 9 THEN '대명'
+					WHEN LENGTH(m.piece_number) = 7 THEN '코엠텍'
+					WHEN LENGTH(m.piece_number) = 12 THEN
+						CASE SUBSTRING(m.piece_number, 3, 1)
+							WHEN '0' THEN '피에스텍'
+							WHEN '1' THEN '극동'
+							WHEN '2' THEN '위지트'
+							WHEN '3' THEN '대성'
+							WHEN '4' THEN '에스씨지그리드'
+							WHEN '5' THEN '동해'
+							WHEN '6' THEN '대명아이티'
+							WHEN '7' THEN '신한'
+							WHEN '8' THEN '태광'
+							WHEN '9' THEN '지텍'
+							ELSE '미확인'
+						END
+					ELSE '미확인'
+				END AS meter_manufacturer,
+				DATE_FORMAT(hl.tran_dttm, '%y-%m-%d %H:%i') AS tran_dttm,
+				IFNULL(IFNULL(t6.line1_ecnt, bt6.line1_ecnt), te6.line1_ecnt) AS CH1,
+				IFNULL(IFNULL(t6.line2_ecnt, bt6.line2_ecnt), te6.line2_ecnt) AS CH2
+			FROM fd_company c
+				JOIN fd_device d ON c.comp_id = d.comp_id
+				JOIN fd_custmst cu ON d.comp_id = cu.comp_id AND d.device_id = cu.device_id AND cu.isDel = '0'
+				JOIN fd_codemst co1 ON cu.cust_mtr_type = co1.code_cd AND co1.isUse = '1'
+				JOIN fd_info_meter m ON d.comp_id = m.comp_id AND d.device_id = m.device_id AND cu.cust_id = m.cust_id AND m.isDel = '0'
+				LEFT JOIN fd_tran_meter_history_lst hl ON d.device_id = hl.device_id
+				LEFT JOIN fd_tran_600 t6 ON d.device_id = t6.device_id AND t6.tran_dttm = hl.tran_dttm
+				LEFT JOIN fd_bak_tran_600 bt6 ON d.device_id = bt6.device_id AND bt6.tran_dttm = hl.tran_dttm
+				LEFT JOIN fd_tran_600_event te6 ON d.device_id = te6.device_id AND te6.tran_dttm = hl.tran_dttm
+			WHERE
+				c.biz_type = 'SBIZ0050'
+				AND c.isFDSTest = '0'
+				AND d.device_model IN ('P000018','P000019','P000020','P000021','P000022')
+			
+			UNION ALL
+			
+			SELECT 
+				c.group_comp_nm,
+				d.serial_no,
+				cu.cust_nm,
+				cu.cust_addr,
+				co1.code_nm,
+				CASE
+					WHEN LENGTH(m.piece_number) = 10 AND LEFT(m.piece_number, 1) = 'D' THEN '대성'
+					WHEN LENGTH(m.piece_number) = 16 OR LENGTH(m.piece_number) = 9 THEN '대명'
+					WHEN LENGTH(m.piece_number) = 7 THEN '코엠텍'
+					WHEN LENGTH(m.piece_number) = 12 THEN
+						CASE SUBSTRING(m.piece_number, 3, 1)
+							WHEN '0' THEN '피에스텍'
+							WHEN '1' THEN '극동'
+							WHEN '2' THEN '위지트'
+							WHEN '3' THEN '대성'
+							WHEN '4' THEN '에스씨지그리드'
+							WHEN '5' THEN '동해'
+							WHEN '6' THEN '대명아이티'
+							WHEN '7' THEN '신한'
+							WHEN '8' THEN '태광'
+							WHEN '9' THEN '지텍'
+							ELSE '미확인'
+						END
+					ELSE '미확인'
+				END AS meter_manufacturer,
+				DATE_FORMAT(hl.tran_dttm, '%y-%m-%d %H:%i') AS tran_dttm,
+				IFNULL(IFNULL(t6.used_line1_ecnt, bt6.used_line1_ecnt), te6.used_line1_ecnt) AS CH1,
+				IFNULL(IFNULL(t6.used_line2_ecnt, bt6.used_line2_ecnt), te6.used_line2_ecnt) AS CH2
+			FROM fd_company c
+				JOIN fd_device d ON c.comp_id = d.comp_id
+				JOIN fd_custmst cu ON d.comp_id = cu.comp_id AND d.device_id = cu.device_id AND cu.isDel = '0'
+				JOIN fd_codemst co1 ON cu.cust_mtr_type = co1.code_cd AND co1.isUse = '1'
+				JOIN fd_info_meter m ON d.comp_id = m.comp_id AND d.device_id = m.device_id AND cu.cust_id = m.cust_id AND m.isDel = '0'
+				LEFT JOIN fd_tran_meter_history_lst hl ON d.device_id = hl.device_id
+				LEFT JOIN fd_tran_300_gl t6 ON d.device_id = t6.device_id AND t6.tran_dttm = hl.tran_dttm
+				LEFT JOIN fd_bak_tran_300_gl bt6 ON d.device_id = bt6.device_id AND bt6.tran_dttm = hl.tran_dttm
+				LEFT JOIN fd_tran_300_gl_event te6 ON d.device_id = te6.device_id AND te6.tran_dttm = hl.tran_dttm
+			WHERE
+				c.biz_type = 'SBIZ0050'
+				<![CDATA[AND c.comp_id <> '12682']]>
+				AND c.isFDSTest = '0'
+				AND c.isUse = '1'
+				AND d.device_model IN ('P000023','P000024')
+		) A
+		WHERE
+			TIMESTAMPDIFF(HOUR,A.tran_dttm,NOW()) >= 25 
+			OR A.CH1 >= 2
+			OR A.CH2 >= 2
+		ORDER BY A.group_comp_nm, A.serial_no
+    </select>
+    
+    <select id="selectHighTankDeviceCnt" resultType="HashMap">
+    	SELECT 
+			COUNT(*) AS tank_cnt
+		FROM fd_company c
+			JOIN fd_device d ON c.comp_id = d.comp_id 
+		WHERE
+			c.biz_type = 'SBIZ0020'
+			AND c.isUse = '1'
+			AND c.isFDSTest = '0'
+			AND d.device_model IN ('P000025', 'P000030', 'P000034', 'P000037')
+			AND c.root_id != '12316';
+    </select>
+    
+    <select id="selectHighTankCompanyList" resultType="HashMap">
+    	SELECT 
+			c1.comp_id,
+			c1.comp_nm,
+			c1.address,
+			s.safety_nm AS emp_nm,
+			s.safety_phone AS emp_phone,
+			COUNT(d.device_id) AS cnt
+		FROM fd_company c
+			LEFT JOIN (
+				SELECT 
+					comp_id,
+					safety_nm,
+					safety_phone
+				FROM fd_safety_info
+				WHERE
+					isDel = '0'
+				GROUP BY comp_id
+			) s ON c.comp_id = s.comp_id 
+			JOIN fd_company c1 ON c.root_id = c1.comp_id AND c1.isUse = '1'
+			JOIN fd_device d ON c.comp_id = d.comp_id 
+		WHERE
+			c.biz_type = 'SBIZ0020'
+			AND c.isUse = '1'
+			AND c.isFDSTest = '0'
+			AND d.device_model IN ('P000025', 'P000030', 'P000034', 'P000037')
+			AND c.root_id != '12316' # 청송그린에너지는 제외
+		GROUP BY c1.root_id;
+    </select>
+    
+    <select id="selectHighTankStatusList" resultType="HashMap">
+    	SELECT 
+			c.group_comp_nm,
+			d.serial_no,
+			co.cust_nm,
+			co.cust_addr,
+			DATE_FORMAT(hl.tran_dttm, '%y-%m-%d %H:%i') AS tran_dttm,
+			hl.tran_type,
+			hl.remain1_percent,
+			hl.remain2_percent,
+			<![CDATA[CASE WHEN hl.remain1_percent = '0' OR remain2_percent = '0' THEN '게이지점검'
+				WHEN TIMESTAMPDIFF(HOUR,hl.tran_dttm,NOW()) >= 25 THEN '통신점검'
+				ELSE '기타'
+			END AS error_stts]]>
+		FROM fd_device d
+			JOIN fd_company c ON d.comp_id = c.comp_id AND c.isUse = '1' AND c.isFDSTest = '0'
+			JOIN fd_info_tank t ON d.comp_id = t.comp_id AND d.device_id = t.device_id AND t.isDel = '0'
+			JOIN fd_custmst co ON t.comp_id = co.comp_id AND t.device_id = co.device_id AND t.cust_id = co.cust_id AND co.isDel = '0'
+			JOIN fd_tran_tank_history_lst hl ON d.device_id = hl.device_id
+		WHERE
+			d.device_model IN ('P000025','P000030')
+			AND 
+			(
+				<![CDATA[TIMESTAMPDIFF(HOUR,hl.tran_dttm,NOW()) >= 25]]> OR
+				(remain1_percent = '0' OR remain2_percent = '0')
+			)
+		GROUP BY d.device_id
+		ORDER BY c.group_comp_nm, d.serial_no;
+    </select>
+    
+    <select id="selectSkgasCbtDeviceCnt" resultType="HashMap">
+    	SELECT 
+			COUNT(*) AS cbt_cnt
+		FROM fd_company c
+			JOIN fd_device d ON c.comp_id = d.comp_id
+			JOIN fd_info_node n ON d.device_id = n.device_id AND n.node_type = 'NODE0004' AND n.isDel = '0'
+		WHERE
+			c.biz_type = 'SBIZ0020'
+			AND c.isUse = '1'
+			AND c.isFDSTest = '0'
+			AND d.device_model IN ('P000013')
+    </select>
+    
+    <select id="selectSkgasCbtCompanyList" resultType="HashMap">
+    	SELECT 
+			c.comp_id,
+			c.comp_nm,
+			c.address,
+			s.safety_nm AS emp_nm,
+			s.safety_phone,
+			COUNT(d.device_id) AS cnt
+		FROM fd_company c
+			LEFT JOIN (
+				SELECT 
+					comp_id,
+					safety_nm,
+					safety_phone
+				FROM fd_safety_info
+				WHERE
+					isDel = '0'
+				GROUP BY comp_id
+			) s ON c.comp_id = s.comp_id
+			JOIN fd_device d ON c.comp_id = d.comp_id
+			JOIN fd_info_node n ON d.device_id = n.device_id AND n.node_type = 'NODE0004' AND n.isDel = '0'
+		WHERE
+			c.biz_type = 'SBIZ0020'
+			AND c.isUse = '1'
+			AND c.isFDSTest = '0'
+			AND d.device_model IN ('P000013')
+		GROUP BY c.comp_id;
+    </select>
+    
+    <select id="selectSkgasCbtList" resultType="HashMap">
+		SELECT *
+		FROM (
+			SELECT 
+				co.group_comp_nm
+				, d.serial_no
+				, c.cust_nm
+				, c.cust_addr
+				, c.latitude
+				, c.longitude
+				, (SELECT rsrp FROM fd_loradata WHERE device_id = d.device_id ORDER BY tran_dttm DESC LIMIT 1) AS AP_rsrp
+				, n1.node_no AS RD_node_no
+				, (SELECT MAX(tran_dttm) FROM fd_loradata WHERE device_id = d.device_id AND node_no = n1.node_no) AS RD_tran_dttm
+				, (SELECT rssi FROM fd_loradata WHERE device_id = d.device_id AND node_no = n1.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RD_rssi
+				, (SELECT battery FROM fd_loradata WHERE device_id = d.device_id AND node_no = n1.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RD_battery_adc
+				, n2.node_no AS RS_node_no
+				, (SELECT MAX(tran_dttm) FROM fd_loradata WHERE device_id = d.device_id AND node_no = n2.node_no) AS RS_tran_dttm
+				, (SELECT rssi FROM fd_loradata WHERE device_id = d.device_id AND node_no = n2.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RS_rssi
+				, (SELECT battery FROM fd_loradata WHERE device_id = d.device_id AND node_no = n2.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RS_battery_adc
+				, n3.node_no AS RV_node_no
+				, (SELECT MAX(tran_dttm) FROM fd_loradata WHERE device_id = d.device_id AND node_no = n3.node_no) AS RV_tran_dttm
+				, (SELECT rssi FROM fd_loradata WHERE device_id = d.device_id AND node_no = n3.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RV_rssi
+				, (SELECT battery FROM fd_loradata WHERE device_id = d.device_id AND node_no = n3.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RV_battery_adc
+				, (SELECT water_temp_adc FROM fd_loradata WHERE device_id = d.device_id AND node_no = n3.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RV_temp_adc
+				, (SELECT water_temp FROM fd_loradata WHERE device_id = d.device_id AND node_no = n3.node_no ORDER BY tran_dttm DESC LIMIT 1) AS RV_temp
+			FROM fd_device d
+				JOIN fd_company co ON d.comp_id = co.comp_id AND co.isUse = '1' AND co.isFDSTest = '0'
+				LEFT JOIN fd_info_node n1 ON d.device_id = n1.device_id AND n1.node_type = 'NODE0001' # fd-538RD
+				LEFT JOIN fd_info_node n2 ON d.device_id = n2.device_id AND n2.node_type = 'NODE0002' # fd-600RS
+				LEFT JOIN fd_info_node n3 ON d.device_id = n3.device_id AND n3.node_type = 'NODE0004' # fd-600RV
+				JOIN fd_custmst c ON c.isDel = '0' AND n3.cust_id = c.cust_id AND n3.isDel = '0'
+			WHERE
+				d.device_model = 'P000013'
+			GROUP BY d.serial_no
+			ORDER BY d.serial_no
+		) A
+		WHERE
+			<![CDATA[A.RD_tran_dttm < DATE_SUB(NOW(), INTERVAL 25 HOUR)
+			OR A.RS_tran_dttm < DATE_SUB(NOW(), INTERVAL 25 HOUR)
+		 	OR A.RV_tran_dttm < DATE_SUB(NOW(), INTERVAL 25 HOUR)]]>
+    </select>
+
+</mapper>

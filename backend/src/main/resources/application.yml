@@ -1,0 +1,62 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: FDS_Monitoring
+
+  servlet:
+    session:
+      timeout: 30m
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  session:
+    store-type: redis
+    timeout: 30m
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}				
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+
+app:
+  datasource:
+    main:
+      jdbc-url: jdbc:mariadb://183.111.115.116:5264/gastok?serverTimezone=UTC&characterEncoding=UTF-8&allowMultiQueries=true&useUnicode=yes
+      username: gtok_user
+      password: firedogs2102@#$
+      driver-class-name: org.mariadb.jdbc.Driver
+
+    sub:
+      jdbc-url: jdbc:mariadb://183.111.115.116:5264/smart_metering?serverTimezone=UTC&characterEncoding=UTF-8&allowMultiQueries=true&useUnicode=yes
+      username: smartami_user
+      password: firedogs2020@
+      driver-class-name: org.mariadb.jdbc.Driver

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fds.external.repository.sub.ExternalRepository">
+	<select id="selectSmartMeteringCnt" resultType="HashMap">
+		SELECT 
+			COUNT(*) AS sm_cnt
+		FROM fd_apartment_manager m
+			JOIN fd_apartment a ON m.view_apt_id = a.apt_id AND a.isDel = '0'
+			JOIN fd_device d ON a.apt_id = d.apt_id
+		WHERE
+			m.apt_id = '00000'
+			AND d.apt_id != '00000' #파이어독스 아파트 단말기 제외
+			AND m.isDel = '0'
+			AND a.isControl = '0'
+	</select>
+	
+	<select id="selectSmartMeteringCompanyList" resultType="HashMap">
+		SELECT 
+			a.apt_id,
+			a.apt_nm,
+			a.address,
+			u.user_nm,
+			a.apt_tel,
+			COUNT(d.device_id) AS cnt
+		FROM fd_apartment_manager m
+			JOIN fd_apartment a ON m.view_apt_id = a.apt_id AND a.isDel = '0'
+			JOIN fd_user_metering u ON a.apt_id = u.apt_id AND u.user_kind = 'SKIN0000' AND u.isDel = '0'
+			JOIN fd_device d ON a.apt_id = d.apt_id
+		WHERE
+			m.apt_id = '00000'
+			AND d.apt_id != '00000' #파이어독스 아파트 단말기 제외
+			AND m.isDel = '0'
+		GROUP BY a.apt_id
+	</select>
+	
+    <select id="selectSmartMeteringList" resultType="HashMap">
+        SELECT 
+			a.apt_nm,
+			d.serial_no,
+			c.bldg_id,
+			c.cust_nm,
+			CASE WHEN c.isType = '1' THEN '열량계'
+				WHEN c.isType = '2' THEN '온수'
+				WHEN c.isType = '3' THEN '수도'
+				WHEN c.isType = '4' THEN '난방'
+				WHEN c.isType = '5' THEN '전기'
+				WHEN c.isType = '6' THEN '가스'
+				WHEN c.isType = '7' THEN '누수'
+				ELSE ''
+			END AS isType,
+			hl.tran_dttm,	
+			CASE WHEN hl.dvc_status = '1' THEN '전원 OFF'
+				WHEN hl.dvc_status = '2' THEN '상시전원'
+				WHEN hl.dvc_status = '4' THEN '배터리전원'
+				WHEN hl.dvc_status = 'A' THEN '상시전원 + 계량기고장'
+				WHEN hl.dvc_status = 'C' THEN '배터리전원 + 계량기고장'
+				WHEN hl.dvc_status = '9' THEN '전원없음 + 계량기고장'
+				WHEN hl.dvc_status = '65' THEN '탈착'
+				ELSE ''
+			END AS dvc_status,
+			IF (TIMESTAMPDIFF(HOUR,hl.tran_dttm,NOW()) >= 25, '통신점검', '') AS comm_error
+		FROM fd_device d
+			JOIN fd_custmst c ON d.apt_id = c.apt_id AND d.device_id = c.device_id AND c.isDel = '0'
+			JOIN fd_apartment a ON a.apt_id = d.apt_id AND a.isDel = '0'
+			LEFT JOIN fd_tran_meter_history_lst hl ON d.device_id = hl.device_id AND c.isType = hl.isType
+		WHERE
+			a.apt_id NOT IN ('00000','00027')
+			AND d.device_stts_cd = 'SAST0001'
+			AND (
+				hl.dvc_status IN ('1', 'A', 'C', '9', '65') OR
+				TIMESTAMPDIFF(HOUR,hl.tran_dttm,NOW()) >= 25
+			)
+		ORDER BY a.apt_id ASC, d.serial_no, d.isType
+    </select>
+
+</mapper>

@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7
+    container_name: fds-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  backend:
+    build: .
+    container_name: fds-monitoring-backend
+    ports:
+      - "8888:8888"
+    depends_on:
+      - redis
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    restart: always
+
+  frontend:
+    build:
+      context: C:/Users/oper5/Desktop/react/fds-monitoring
+    container_name: fds-monitoring-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
