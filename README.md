@@ -34,7 +34,7 @@ IoT 장비에서 수집되는 데이터를 실시간으로 시각화하고,
 ## Database
 
 * MariaDB
-* Redis (적용 진행 중)
+* Redis
 
 ## Infra / Deploy
 
